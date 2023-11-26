@@ -8,9 +8,8 @@ from werewolf import HyunjiWerewolf
 from argparse import ArgumentParser
 from aiwolf import TcpipClient
 from random import randint
-from read_log import read_log
 
-myname = 'HyunjiAgent{:02d}'.format(randint(0,1000))
+myname = 'KimAgent{:02d}'.format(randint(0,1000))
 
 class HyunjiPlayer(AbstractPlayer):
     villager: AbstractPlayer

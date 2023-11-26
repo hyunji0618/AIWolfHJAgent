@@ -9,7 +9,7 @@ from random import randint
 from read_log import read_log
 
 if __name__ == "__main__":
-    agent: AbstractPlayer = HyunjiPlayer('HyunjiAgent')
+    agent: AbstractPlayer = HyunjiPlayer('KimAgent')
     parser: ArgumentParser = ArgumentParser(add_help=False)
     parser.add_argument("-p", type=int, action="store", dest="port", required=True)
     parser.add_argument("-h", type=str, action="store", dest="hostname", required=True)

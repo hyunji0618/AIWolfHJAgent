@@ -116,7 +116,7 @@ class HyunjiPossessed(HyunjiVillager):
                                          if self.comingout_map[a] == Role.SEER])
             if len(co_seers_others) >= 1:
                 co_seers_other = self.random_select(co_seers_others)
-                sit1_talk: ContentBuilder = random.choice([RequestContentBuilder(co_seers_other, Content(VoteContentBuilder(co_seers_other)), AGENT_ANY),
+                sit1_talk: ContentBuilder = random.choice([RequestContentBuilder(co_seers_other, Content(VoteContentBuilder(co_seers_other))),
                                                       EstimateContentBuilder(co_seers_other, Role.WEREWOLF),
                                                       EmptyContentBuilder()])
                 co_seers_others.remove(co_seers_other)
@@ -134,7 +134,7 @@ class HyunjiPossessed(HyunjiVillager):
             if len(co_seers_others) >= 1:
                 co_seers_other = self.random_select(co_seers_others)
                 sit2_talk: ContentBuilder = random.choice([EstimateContentBuilder(co_seers_other, Role.WEREWOLF),
-                                                           RequestContentBuilder(co_seers_other, Content(VoteContentBuilder(co_seers_other)), AGENT_ANY),
+                                                           RequestContentBuilder(co_seers_other, Content(VoteContentBuilder(co_seers_other))),
                                                            EmptyContentBuilder()])
                 co_seers_others.remove(co_seers_other)
                 return Content(sit2_talk)
