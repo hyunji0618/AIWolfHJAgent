@@ -19,8 +19,9 @@ class HyunjiMedium(HyunjiVillager):
     voted_reports: List[Vote] # Time series of voting reports.
     request_vote_talk: List[Vote] #Talk containing REQUEST VOTE.
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, agent_name) -> None:
+        super().__init__(agent_name)
+        self.myname = agent_name
         self.co_date = 0
         self.found_wolf = False
         self.has_co = False

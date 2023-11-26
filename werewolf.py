@@ -2,11 +2,12 @@ import random
 from typing import List
 
 from aiwolf import (Agent, AttackContentBuilder, ComingoutContentBuilder,
-                    Content, GameInfo, GameSetting, Judge, Role, Species)
+                    Content, GameInfo, GameSetting, Judge, Role, Species, Vote)
 from aiwolf.constant import AGENT_NONE
 
 from const import CONTENT_SKIP, JUDGE_EMPTY
 from possessed import HyunjiPossessed
+from analyzer import Analyzer
 
 
 class HyunjiWerewolf(HyunjiPossessed):
@@ -14,11 +15,12 @@ class HyunjiWerewolf(HyunjiPossessed):
     humans: List[Agent] # Humans.
     attack_vote_candidate: Agent # The candidate for the attack voting.
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, agent_name) -> None:
+        super().__init__(agent_name)
         self.allies = []
         self.humans = []
         self.attack_vote_candidate = AGENT_NONE
+        self.myname = agent_name
 
     def initialize(self, game_info: GameInfo, game_setting: GameSetting) -> None:
         super().initialize(game_info, game_setting)
@@ -73,4 +75,8 @@ class HyunjiWerewolf(HyunjiPossessed):
         return CONTENT_SKIP
 
     def attack(self) -> Agent:
+        latest_vote_list: List[Vote] = self.game_info.latest_vote_list
+        Analyzer.debug_print("-------- Attack --------")
+        Analyzer.debug_print("Latest vote list: ", self.vote_to_dict(latest_vote_list))
+        Analyzer.debug_print("Latest vote: ", self.attack_vote_candidate)
         return self.attack_vote_candidate if self.attack_vote_candidate != AGENT_NONE else self.me

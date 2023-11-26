@@ -5,16 +5,19 @@ from typing import Deque, List
 from aiwolf import (Agent, ComingoutContentBuilder, Content,
                     DivinedResultContentBuilder, GameInfo, GameSetting,
                     IdentContentBuilder, Judge, Role, Species, Vote,
-                    VoteContentBuilder)
+                    VoteContentBuilder, ContentBuilder, EstimateContentBuilder, RequestContentBuilder, EmptyContentBuilder)
 from aiwolf.constant import AGENT_NONE
 
 from const import CONTENT_SKIP, JUDGE_EMPTY
 from villager import HyunjiVillager
+from analyzer import Analyzer
 
 class HyunjiPossessed(HyunjiVillager):
     fake_role: Role # Fake role.
     co_date: int # Scheduled comingout date.
     has_co: bool # Whether or not comingout has done.
+    has_first_co: bool
+    random_co_role: Role
     my_judgee_queue: Deque[Judge] # Queue of fake judgements.
     not_judged_agents: List[Agent] #Agents that have not been judged.
     num_wolves: int # The number of werewolves.
@@ -23,11 +26,13 @@ class HyunjiPossessed(HyunjiVillager):
     voted_reports: List[Vote] # Time series of voting reports.
     request_vote_talk: List[Vote] # Talk containing REQUEST VOTE.
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, agent_name) -> None:
+        super().__init__(agent_name)
+        self.myname = agent_name
         self.fake_role = Role.SEER
         self.co_date = 0
         self.has_co = False
+        self.has_first_co = False
         self.my_judgee_queue = deque()
         self.not_judged_agents = []
         self.num_wolves = 0
@@ -41,6 +46,7 @@ class HyunjiPossessed(HyunjiVillager):
         self.fake_role = Role.SEER
         self.co_date = 1
         self.has_co = False
+        self.has_first_co = False
         self.my_judgee_queue.clear()
         self.not_judged_agents = self.get_others(self.game_info.agent_list)
         self.num_wolves = game_setting.role_num_map.get(Role.WEREWOLF, 0)
@@ -72,6 +78,10 @@ class HyunjiPossessed(HyunjiVillager):
         super().day_start()
         # Process the fake judgement.
         judge: Judge = self.get_fake_judge()
+        day: int = self.game_info.day
+        if day >= 2:
+            vote_list: List[Vote] = self.game_info.vote_list
+            # Analyzer.debug_print('vote_list:', self.vote_to_dict(vote_list))
         if judge != JUDGE_EMPTY:
             self.my_judgee_queue.append(judge)
             if judge.target in self.not_judged_agents:
@@ -87,6 +97,48 @@ class HyunjiPossessed(HyunjiVillager):
         # The list of agents that requested to vote for me.
         request_vote_for_me: List[Agent] = [j.agent for j in self.request_vote_talk if j.target == self.me]
         
+        # Vote for one of the alive agents that can vote for me this turn.
+        candidates: List[Agent] = self.get_alive_others(vote_talk_for_me)
+        if not self.has_first_co and self.game_info.day == 1:
+            self.has_first_co = True
+            self.random_co_role: Role = random.choice([Role.SEER, Role.VILLAGER])
+            return Content(ComingoutContentBuilder(self.me, self.random_co_role))
+        
+        # Situation 1: No real seer among CO SEER
+        if self.random_co_role == Role.VILLAGER:
+            for a in self.talk_list_all:
+                if "Estimate" in a.text:
+                    if "WEREWOLF" or "SEER" in a.text: 
+                        candidates = a.agent
+                if "Request" in a.text:
+                    candidates = a.agent
+            co_seers_others: List[Agent] = self.get_alive_others([a for a in self.comingout_map
+                                         if self.comingout_map[a] == Role.SEER])
+            if len(co_seers_others) >= 1:
+                co_seers_other = self.random_select(co_seers_others)
+                sit1_talk: ContentBuilder = random.choice([RequestContentBuilder(co_seers_other, Content(VoteContentBuilder(co_seers_other))),
+                                                      EstimateContentBuilder(co_seers_other, Role.WEREWOLF),
+                                                      EmptyContentBuilder()])
+                co_seers_others.remove(co_seers_other)
+                return Content(sit1_talk)
+        # Situation 2: Real seer exists among CO SEER
+        elif self.random_co_role == Role.SEER:
+            for a in self.talk_list_all:
+                if "Estimate" in a.text:
+                    if "WEREWOLF" or "SEER" in a.text: 
+                        candidates = a.agent
+                if "Request" in a.text:
+                    candidates = a.agent
+            co_seers_others: List[Agent] = self.get_alive_others([a for a in self.comingout_map
+                                         if self.comingout_map[a] == Role.SEER])
+            if len(co_seers_others) >= 1:
+                co_seers_other = self.random_select(co_seers_others)
+                sit2_talk: ContentBuilder = random.choice([EstimateContentBuilder(co_seers_other, Role.WEREWOLF),
+                                                           RequestContentBuilder(co_seers_other, Content(VoteContentBuilder(co_seers_other))),
+                                                           EmptyContentBuilder()])
+                co_seers_others.remove(co_seers_other)
+                return Content(sit2_talk)
+        
         # Do comingout if it's on scheduled day or a werewolf is found.
         if self.fake_role != Role.VILLAGER and not self.has_co \
                 and (self.game_info.day == self.co_date or self.werewolves):
@@ -100,8 +152,6 @@ class HyunjiPossessed(HyunjiVillager):
             elif self.fake_role == Role.MEDIUM:
                 return Content(IdentContentBuilder(judge.target, judge.result))
         
-        # Vote for one of the alive agents that can vote for me this turn.
-        candidates: List[Agent] = self.get_alive_others(vote_talk_for_me)
         # Vote for one of the alive agents that requested to vote for me this turn.
         if not candidates:
             candidates = self.get_alive_others(request_vote_for_me)
@@ -124,3 +174,4 @@ class HyunjiPossessed(HyunjiVillager):
             if self.vote_candidate != AGENT_NONE:
                 return Content(VoteContentBuilder(self.vote_candidate))
         return CONTENT_SKIP
+    

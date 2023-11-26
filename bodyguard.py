@@ -10,8 +10,10 @@ class HyunjiBodyguard(HyunjiVillager):
     # Target of the guard.
     to_be_guarded: Agent
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, agent_name) -> None:
+        super().__init__(agent_name)
+        self.myname = agent_name
+        
         self.to_be_guarded = AGENT_NONE
 
     def initialize(self, game_info: GameInfo, game_setting: GameSetting) -> None:
