@@ -80,7 +80,7 @@ class HyunjiSeer(HyunjiVillager):
                                          if self.comingout_map[a] == Role.SEER])
             if len(fake_seers) >= 1:
                 fake_seer = self.random_select(fake_seers)
-                sit1_talk: ContentBuilder = random.choice([RequestContentBuilder(fake_seer, Content(VoteContentBuilder(fake_seer))),
+                sit1_talk: ContentBuilder = random.choice([RequestContentBuilder(fake_seer, Content(VoteContentBuilder(fake_seer)), AGENT_ANY),
                                                       EstimateContentBuilder(fake_seer, Role.WEREWOLF),
                                                       EmptyContentBuilder()])
                 fake_seers.remove(fake_seer)
@@ -94,7 +94,7 @@ class HyunjiSeer(HyunjiVillager):
                 fake_seer = self.random_select(fake_seers)
                 sit2_talk: ContentBuilder = random.choice([EstimateContentBuilder(fake_seer, Role.SEER),
                                                            EstimateContentBuilder(fake_seer, Role.WEREWOLF),
-                                                           RequestContentBuilder(fake_seer, Content(VoteContentBuilder(fake_seer))),
+                                                           RequestContentBuilder(fake_seer, Content(VoteContentBuilder(fake_seer)), AGENT_ANY),
                                                            EmptyContentBuilder()])
                 fake_seers.remove(fake_seer)
                 return Content(sit2_talk)

@@ -6,7 +6,7 @@ from aiwolf import (Agent, ComingoutContentBuilder, Content,
                     DivinedResultContentBuilder, GameInfo, GameSetting,
                     IdentContentBuilder, Judge, Role, Species, Vote,
                     VoteContentBuilder, ContentBuilder, EstimateContentBuilder, RequestContentBuilder, EmptyContentBuilder)
-from aiwolf.constant import AGENT_NONE
+from aiwolf.constant import AGENT_NONE, AGENT_ANY, AGENT_UNSPEC
 
 from const import CONTENT_SKIP, JUDGE_EMPTY
 from villager import HyunjiVillager
@@ -116,7 +116,7 @@ class HyunjiPossessed(HyunjiVillager):
                                          if self.comingout_map[a] == Role.SEER])
             if len(co_seers_others) >= 1:
                 co_seers_other = self.random_select(co_seers_others)
-                sit1_talk: ContentBuilder = random.choice([RequestContentBuilder(co_seers_other, Content(VoteContentBuilder(co_seers_other))),
+                sit1_talk: ContentBuilder = random.choice([RequestContentBuilder(co_seers_other, Content(VoteContentBuilder(co_seers_other)), AGENT_ANY),
                                                       EstimateContentBuilder(co_seers_other, Role.WEREWOLF),
                                                       EmptyContentBuilder()])
                 co_seers_others.remove(co_seers_other)
@@ -134,7 +134,7 @@ class HyunjiPossessed(HyunjiVillager):
             if len(co_seers_others) >= 1:
                 co_seers_other = self.random_select(co_seers_others)
                 sit2_talk: ContentBuilder = random.choice([EstimateContentBuilder(co_seers_other, Role.WEREWOLF),
-                                                           RequestContentBuilder(co_seers_other, Content(VoteContentBuilder(co_seers_other))),
+                                                           RequestContentBuilder(co_seers_other, Content(VoteContentBuilder(co_seers_other)), AGENT_ANY),
                                                            EmptyContentBuilder()])
                 co_seers_others.remove(co_seers_other)
                 return Content(sit2_talk)
