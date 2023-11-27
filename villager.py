@@ -5,8 +5,8 @@ from collections import defaultdict
 
 from aiwolf import (AbstractPlayer, Agent, Content, GameInfo, GameSetting,
                     Judge, Role, Species, Status, Talk, Topic, Vote, Operator, 
-                    VoteContentBuilder, BecauseContentBuilder, ComingoutContentBuilder, 
-                    RequestContentBuilder, AndContentBuilder, DivinedResultContentBuilder)
+                    VoteContentBuilder, ComingoutContentBuilder, 
+                    )
 from aiwolf.constant import AGENT_NONE, AGENT_ANY
 from analyzer import Analyzer
 from const import CONTENT_SKIP
@@ -208,7 +208,7 @@ class HyunjiVillager(AbstractPlayer):
                 for contents in content.content_list:
                     if contents.topic == Topic.VOTE:
                         self.request_vote_talk.append(Vote(talker, game_info.day, contents.target))
-                        Analyzer.debug_print("REQUEST: ", talker, "request", content.subject, "to vote", content.target)
+                        Analyzer.debug_print("REQUEST: ", talker, "request", content.subject, "to vote", contents.target)
         self.talk_list_head = len(game_info.talk_list)  # All done.
 
     def talk(self) -> Content:
@@ -236,6 +236,23 @@ class HyunjiVillager(AbstractPlayer):
                                         if j.agent not in fake_seers and j.result == Species.WEREWOLF]
         # Vote for one of the alive agents that were judged as werewolves by non-fake seers.
         candidates: List[Agent] = self.get_alive_others(reported_wolves)
+
+        for i in range(0, len(self.game_info.talk_list)): # Analyze talks that have not been analyzed yet.
+            tk: Talk = self.game_info.talk_list[i]  # The talk to be analyzed.
+            content: Content = Content.compile(tk.text)
+            if content.topic == Topic.ESTIMATE and content.role == Role.WEREWOLF:
+                if content.target not in candidates:
+                    if self.is_alive(content.target):
+                        candidates.append(content.target)
+            if content.topic == Topic.OPERATOR and content.operator == Operator.REQUEST:
+                for contents in content.content_list:
+                    if contents.topic == Topic.VOTE:
+                        if content.target not in candidates and self.is_alive(contents.target):
+                            candidates.append(contents.target)
+            if content.topic == Topic.DIVINED:
+                if content.target not in candidates and self.is_alive(content.target):
+                    candidates.append(content.target)
+
         # Vote for one of the alive agents that can vote for me this turn.
         if not candidates:
             candidates = self.get_alive_others(vote_talk_for_me)

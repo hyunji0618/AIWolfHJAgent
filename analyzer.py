@@ -16,11 +16,11 @@ class Analyzer:
     game_count: int = 0
     win_count: DefaultDict[Agent, int] = {}
     win_rate: DefaultDict[Agent, float] = {}
-    # 役職ごとの回数
+    
     agent_role_count: DefaultDict[Agent, DefaultDict[Role, int]] = defaultdict(lambda: defaultdict(int))
-    # 役職ごとの勝利回数
+    
     win_role_count: DefaultDict[Agent, DefaultDict[Role, int]] = defaultdict(lambda: defaultdict(int))
-    # 役職ごとの勝率
+    
     win_rate_by_role: DefaultDict[Agent, DefaultDict[Role, float]] = defaultdict(lambda: defaultdict(float))
     sum_score: float = 0.0
 
@@ -81,6 +81,3 @@ class Analyzer:
                 rate = Analyzer.win_rate[agent]
                 weak_agent = agent
         return weak_agent
-
-
-
