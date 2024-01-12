@@ -5,7 +5,7 @@ from collections import defaultdict
 
 from aiwolf import (AbstractPlayer, Agent, Content, GameInfo, GameSetting,
                     Judge, Role, Species, Status, Talk, Topic, Vote, Operator, 
-                    VoteContentBuilder, ComingoutContentBuilder, 
+                    VoteContentBuilder, ComingoutContentBuilder, InquiryContentBuilder
                     )
 from aiwolf.constant import AGENT_NONE, AGENT_ANY
 from analyzer import Analyzer
@@ -30,6 +30,9 @@ class HyunjiVillager(AbstractPlayer):
     talk_list_all: List[Talk] # List of all talks
     talk_turn: int # Turn of the talks
     has_first_co: bool
+    talk_len: int
+    interaction_link: List[List[int]] # List of all interaction links
+    interaction_len: int
         
     def __init__(self, agent_name) -> None:
         self.me = AGENT_NONE
@@ -48,9 +51,10 @@ class HyunjiVillager(AbstractPlayer):
         self.talk_list_all = []
         self.talk_turn = 0
         self.has_first_co = False
-        
-    def getName(self):
-        return self.myname
+        self.talk_len = 0
+        self.talk_exclude_vote = 0
+        self.interaction_len = 0
+        self.interaction_link = [[]]
     
     def is_alive(self, agent: Agent) -> bool:
         """Bool value of whether the agent is alive."""
@@ -130,6 +134,7 @@ class HyunjiVillager(AbstractPlayer):
         self.game_setting = game_setting
         self.me = game_info.me
         self.comingout_map.clear()
+        self.interaction_link.clear()
         self.divination_reports.clear()
         self.identification_reports.clear()
         self.vote_talk.clear()
@@ -138,6 +143,9 @@ class HyunjiVillager(AbstractPlayer):
         self.talk_list_head = 0
         self.talk_list_all = []
         self.talk_turn = 0
+        self.talk_len = 0
+        self.interaction_len = 0
+        self.talk_exclude_vote = 0
         self.has_first_co = False
         
         Analyzer.game_count += 1
@@ -182,32 +190,41 @@ class HyunjiVillager(AbstractPlayer):
         self.game_info = game_info  # Update game information.
         for i in range(self.talk_list_head, len(game_info.talk_list)): # Analyze talks that have not been analyzed yet.
             tk: Talk = game_info.talk_list[i]  # The talk to be analyzed.
+            self.talk_len = self.talk_len + 1
             talker: Agent = tk.agent
+            content: Content = Content.compile(tk.text)
+            if talker.agent_idx != content.target.agent_idx:
+                if content.operator != Operator.REQUEST and content.topic != Topic.Skip and content.topic != Topic.Over:
+                    self.interaction_link.append([talker.agent_idx, content.target.agent_idx, game_info.day, tk.idx])
+                    #Analyzer.debug_print(content.topic, talker.agent_idx, content.target.agent_idx)
             #if talker == self.me:  # Skip my talk.
                 #continue
-            content: Content = Content.compile(tk.text)
             if content.topic == Topic.COMINGOUT:
                 self.comingout_map[talker] = content.role
-                Analyzer.debug_print("CO: ", talker, content.role)
+                #Analyzer.debug_print("CO: ", talker, content.role)
             elif content.topic == Topic.DIVINED:
                 self.divination_reports.append(Judge(talker, game_info.day, content.target, content.result))
-                Analyzer.debug_print("DIVINED: ", talker, content.target, content.result)
+                #Analyzer.debug_print("DIVINED: ", talker, content.target, content.result)
             elif content.topic == Topic.IDENTIFIED:
                 self.identification_reports.append(Judge(talker, game_info.day, content.target, content.result))
-                Analyzer.debug_print("IDENTIFIED: ", talker, content.target, content.result)
+                #Analyzer.debug_print("IDENTIFIED: ", talker, content.target, content.result)
             elif content.topic == Topic.ESTIMATE:
                 Analyzer.debug_print("ESTIMATE: ", talker, "estimate", content.target, content.role)
             elif content.topic == Topic.VOTE:
                 self.vote_talk.append(Vote(talker, game_info.day, content.target))
-                Analyzer.debug_print("VOTE: ", talker, "to", content.target)
+                self.talk_exclude_vote = self.talk_exclude_vote - 1
+                #Analyzer.debug_print("VOTE: ", talker, "to", content.target)
             elif content.topic == Topic.VOTED: 
                 self.voted_reports.append(Vote(talker, game_info.day, content.target))
             elif content.topic == Topic.GUARDED: 
                 Analyzer.debug_print("GUARDED: ", talker, content.target)
+            elif content.topic == Topic.OPERATOR and content.operator == Operator.INQUIRE:
+                Analyzer.debug_print("INQUIRY: ", talker, content.target, content.topic)
             elif content.topic == Topic.OPERATOR and content.operator == Operator.REQUEST:
                 for contents in content.content_list:
                     if contents.topic == Topic.VOTE:
                         self.request_vote_talk.append(Vote(talker, game_info.day, contents.target))
+                        self.interaction_link.append([talker.agent_idx, contents.target.agent_idx, game_info.day, tk.idx])
                         Analyzer.debug_print("REQUEST: ", talker, "request", content.subject, "to vote", contents.target)
         self.talk_list_head = len(game_info.talk_list)  # All done.
 
@@ -291,7 +308,14 @@ class HyunjiVillager(AbstractPlayer):
     def finish(self) -> None:
         vote_list: List[Vote] = self.game_info.vote_list
         Analyzer.debug_print('List of the final vote:', self.vote_to_dict(vote_list))
-
+        for speaker in self.interaction_link:
+            for target in self.interaction_link:
+                if speaker[1] == target[0] and target[1] == speaker[0]:
+                    if speaker[2] <= target[2] and speaker[3] < target[3]:
+                        self.interaction_len = self.interaction_len + 1       
+        #Analyzer.debug_print(self.interaction_link)
+        Analyzer.debug_print('Number of the interaction: ', self.interaction_len)
+        #for action in self.interaction_link:
         alive_wolves = [a for a in self.game_info.alive_agent_list if self.game_info.role_map[a] == Role.WEREWOLF]
         villagers_win = (len(alive_wolves) == 0)
         is_villagers_side = self.game_info.my_role in [Role.VILLAGER, Role.SEER, Role.MEDIUM, Role.BODYGUARD]
@@ -301,5 +325,5 @@ class HyunjiVillager(AbstractPlayer):
         Analyzer.debug_print("Villagers won?: ", is_villagers_side == villagers_win)
         Analyzer.debug_print("My win rate so far: ", Analyzer.win_count[self.me], "/", Analyzer.game_count, " = ", Analyzer.win_rate[self.me])
         Analyzer.debug_print("")
-        
+        Analyzer.debug_print("Talk len of this game", self.talk_len)
         pass

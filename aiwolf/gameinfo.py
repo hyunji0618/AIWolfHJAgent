@@ -34,46 +34,47 @@ class GameInfo:
 
     me: Agent
     """The agent who recieves this GameInfo."""
-    attack_vote_list: List[Vote]
-    """The list of votes for attack."""
-    attacked_agent: Optional[Agent]
-    """The agent decided to be attacked as a result of werewolves' vote."""
-    cursed_fox: Optional[Agent]
-    """The fox killed by curse."""
     day: int
     """Current day."""
-    divine_result: Optional[Judge]
-    """The result of the dvination."""
-    executed_agent: Optional[Agent]
-    """The agent executed last night."""
-    existing_role_list: List[Role]
-    """The list of existing roles in this game."""
-    guarded_agent: Optional[Agent]
-    """The agent guarded last night."""
-    last_dead_agent_list: List[Agent]
-    """The list of agents who died last night."""
-    latest_attack_vote_list: List[Vote]
-    """The latest list of votes for attack."""
-    latest_executed_agent: Optional[Agent]
-    """The latest executed agent."""
-    latest_vote_list: List[Vote]
-    """The latest list of votes for execution."""
-    medium_result: Optional[Judge]
-    """The result of the inquest."""
-    remain_talk_map: Dict[Agent, int]
-    """The number of opportunities to talk remaining."""
-    remain_whisper_map: Dict[Agent, int]
-    """The number of opportunities to whisper remaining."""
     role_map: Dict[Agent, Role]
     """The known roles of agents."""
     status_map: Dict[Agent, Status]
     """The statuses of all agents."""
     talk_list: List[Talk]
     """The list of today's talks."""
-    vote_list: List[Vote]
-    """The list of votes for execution."""
     whisper_list: List[Whisper]
     """The list of today's whispers."""
+    vote_list: List[Vote]
+    """The list of votes for execution."""
+    latest_vote_list: List[Vote]
+    """The latest list of votes for execution."""
+    executed_agent: Optional[Agent]
+    """The agent executed last night."""
+    latest_executed_agent: Optional[Agent]
+    """The latest executed agent."""
+    last_dead_agent_list: List[Agent]
+    """The list of agents who died last night."""
+    attack_vote_list: List[Vote]
+    """The list of votes for attack."""
+    latest_attack_vote_list: List[Vote]
+    """The latest list of votes for attack."""
+    attacked_agent: Optional[Agent]
+    """The agent decided to be attacked."""
+    divine_result: Optional[Judge]
+    """The result of the dvination."""
+    guarded_agent: Optional[Agent]
+    """The agent guarded last night."""
+    
+    remain_talk_map: Dict[Agent, int]
+    """The number of opportunities to talk remaining."""
+    remain_whisper_map: Dict[Agent, int]
+    """The number of opportunities to whisper remaining."""
+    existing_role_list: List[Role]
+    """The list of existing roles in this game."""
+    cursed_fox: Optional[Agent]
+    """The fox killed by curse."""
+    medium_result: Optional[Judge]
+    """The result of the inquest."""
 
     def __init__(self, game_info: _GameInfo) -> None:
         """Initializes a new instance of GameInfo.

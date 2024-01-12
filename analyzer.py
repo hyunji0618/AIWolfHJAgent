@@ -60,7 +60,6 @@ class Analyzer:
             Analyzer.debug_print("Win rate by role: ", role, round(Analyzer.win_rate_by_role[agent][role], 3))
         Analyzer.debug_print("-----------------------------------")
 
-
     @staticmethod
     def get_strong_agent(agent_list: List[Agent], threshold: float = 0.0) -> Agent:
         rate = threshold
@@ -70,7 +69,6 @@ class Analyzer:
                 rate = Analyzer.win_rate[agent]
                 strong_agent = agent
         return strong_agent
-
 
     @staticmethod
     def get_weak_agent(agent_list: List[Agent], threshold: float = 1.0) -> Agent:

@@ -5,7 +5,7 @@ from typing import Deque, List, Optional
 from aiwolf import (Agent, ComingoutContentBuilder, Content, ContentBuilder, Topic,
                     DivinedResultContentBuilder, GameInfo, GameSetting, Judge,
                     Role, Species, Vote, VoteContentBuilder, RequestContentBuilder, 
-                    EstimateContentBuilder, EmptyContentBuilder)
+                    EstimateContentBuilder, EmptyContentBuilder, BecauseContentBuilder, )
 from aiwolf.constant import AGENT_NONE, AGENT_ANY
 from aiwolf.utterance import UtteranceType, Talk
 
@@ -85,7 +85,7 @@ class HyunjiSeer(HyunjiVillager):
         if self.random_co_role == Role.VILLAGER:
             if len(self.fake_seers) >= 1:
                 fake_seer = self.random_select(self.fake_seers)
-                self.sit1_talk: ContentBuilder = random.choice([RequestContentBuilder(AGENT_ANY, Content(VoteContentBuilder(fake_seer))),
+                self.sit1_talk: ContentBuilder = random.choice([BecauseContentBuilder(Content(EstimateContentBuilder(fake_seer, Role.WEREWOLF)), Content(RequestContentBuilder(AGENT_ANY, Content(VoteContentBuilder(fake_seer))))),
                                                       EstimateContentBuilder(fake_seer, Role.WEREWOLF),
                                                       EmptyContentBuilder()])
                 return Content(self.sit1_talk)
@@ -94,9 +94,9 @@ class HyunjiSeer(HyunjiVillager):
             self.has_co = True
             if len(self.fake_seers) >= 1:
                 fake_seer = self.random_select(self.fake_seers)
-                self.sit2_talk: ContentBuilder = random.choice([EstimateContentBuilder(fake_seer, Role.SEER),
-                                                           EstimateContentBuilder(fake_seer, Role.WEREWOLF),
-                                                           RequestContentBuilder(AGENT_ANY, Content(VoteContentBuilder(fake_seer))),
+                self.sit2_talk: ContentBuilder = random.choice([BecauseContentBuilder(Content(ComingoutContentBuilder(self.me, Role.SEER)), Content(EstimateContentBuilder(fake_seer, Role.WEREWOLF))),
+                                                           EstimateContentBuilder(fake_seer, Role.SEER),
+                                                           BecauseContentBuilder(Content(EstimateContentBuilder(fake_seer, Role.WEREWOLF)), Content(RequestContentBuilder(AGENT_ANY, Content(VoteContentBuilder(fake_seer))))),
                                                            EmptyContentBuilder()])
                 return Content(self.sit2_talk)
               
